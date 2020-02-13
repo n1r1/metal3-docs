@@ -101,7 +101,7 @@ CR with a `reboot.metal3.io/machine-remediation`. Upon host power off, the contr
 will delete the node and then remove the annotation, to power on the host.
 
 After restart/crash of the new controller it will check for 
-`reboot.metal3.io/machine-remediation` annotation on all nodes,
+`reboot.metal3.io/machine-remediation` annotation on all hosts,
  and continue remediation process, to make sure the host is not left in powered off state.  
 
 ### User Stories
