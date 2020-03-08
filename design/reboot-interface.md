@@ -83,18 +83,6 @@ likely need manual intervention to recover anyway.
 
 ## Proposal
 
-A new date-time field, ``lastPoweredOn``, will be added to the ``provisioning``
-section of the BareMetalHost status. This records a time after which the Host
-was last booted using the current image. Processes running prior to this time
-may be assumed to have been stopped.
-
-A new date-time field, ``pendingRebootSince``, will be added to the
-``provisioning`` section of the BareMetalHost status. This records a time
-before which the Host was last requested to reboot (because we cannot trust any
-value from the user, who even if well intentioned, may have created the
-timestamp on a machine that was not synchronised with the cluster or has a
-different timezone).
-
 Since the user interface requirements are still unclear, we will follow
 standard practices of using an annotation to trigger reboots.
 
@@ -128,27 +116,16 @@ If:
 
 * there is one or more annotations with the ``reboot.metal3.io`` prefix
   present, and
-* the ``Status.PoweredOn`` field is true, and
-* the value of ``pendingRebootSince`` is empty or earlier than the
-  ``lastPoweredOn`` time
+* the ``Status.PoweredOn`` field is true
 
-then the Host controller will update ``pendingRebootSince`` to the current
-time.
+then the Host controller will power off the host regardless of the ``Spec.Online`` setting.
 
-Whenever ``pendingRebootSince`` is later than the ``lastPoweredOn`` time, the
-Host controller will attempt to power the host off regardless of the
-``Spec.Online`` setting.
-
-Once the Host is powered off (``Status.PoweredOn`` is false), if/when
-
-* the ``Spec.Online`` field is true, and
-* the ``lastPoweredOn`` time is before the ``pendingRebootSince`` time
-
-then the controller should remove the suffixless ``reboot.metal3.io``
-annotation (if present). Once no reboot annotations are present (i.e. those of
-the form ``reboot.metal3.io/{key}`` have been removed by their originators),
-the existing logic for powering on the Host should execute and update the
-``lastPoweredOn`` timestamp accordingly.
+Once the Host is powered off (``Status.PoweredOn`` is false) the Host controller:
+ * removes the suffixless ``reboot.metal3.io`` annotation if exists.
+ * powers on the the Host if/when:
+    * the ``Spec.Online`` field is true, and
+    * no reboot annotation exists from any kind on the host (i.e. those of
+the form ``reboot.metal3.io/{key}`` have been removed by their originators)
 
 The controller automatically removes all annotations with the
 ``reboot.metal3.io`` prefix if
